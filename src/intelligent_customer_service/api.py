@@ -54,6 +54,21 @@ def create_app(agent: CustomerServiceAgent | None = None, tools: CustomerService
     def health() -> dict[str, str]:
         return {"status": "ok"}
 
+    @app.get("/config/status")
+    def config_status() -> dict[str, Any]:
+        settings = get_settings()
+        return {
+            "provider": "OpenAI-compatible",
+            "llm_ready": bool(settings.api_key),
+            "model": settings.llm_model,
+            "base_url": settings.llm_base_url,
+            "database_path": str(settings.database_path),
+            "refund_review_threshold": settings.refund_review_threshold,
+            "next_step": "Configure DASHSCOPE_API_KEY or LLM_API_KEY in .env to enable /chat."
+            if not settings.api_key
+            else "LLM chat is ready.",
+        }
+
     @app.post("/chat", response_model=ChatResponse)
     def chat(request: ChatRequest) -> dict:
         if agent is None:

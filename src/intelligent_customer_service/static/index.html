@@ -29,6 +29,10 @@
             <span class="status-dot"></span>
             <span id="healthText">Checking</span>
           </div>
+          <div class="status-line secondary">
+            <span class="status-dot llm"></span>
+            <span id="llmText">LLM checking</span>
+          </div>
           <div class="metric-grid">
             <div>
               <span class="metric-value" id="ticketCount">0</span>
@@ -48,6 +52,11 @@
             <p class="eyebrow">Customer ID</p>
             <input id="customerId" class="customer-input" value="CUST-001" />
           </div>
+          <div class="runbook-strip">
+            <span>1. 配置 .env</span>
+            <span>2. 初始化数据库</span>
+            <span>3. 启动服务</span>
+          </div>
           <div class="top-actions">
             <a href="/docs" target="_blank" rel="noreferrer">API Docs</a>
             <button id="refreshBtn" type="button">Refresh</button>
@@ -61,7 +70,12 @@
                 <p class="eyebrow">Live Agent</p>
                 <h2>智能客服会话</h2>
               </div>
-              <span class="pill">Qwen compatible</span>
+              <span class="pill" id="modelPill">Qwen compatible</span>
+            </div>
+
+            <div class="handoff-banner" id="handoffBanner">
+              <strong>交付演示模式</strong>
+              <span>未配置 API Key 时，可使用右侧业务工具完成订单、物流、工单、退款审核演示。</span>
             </div>
 
             <div id="chatLog" class="chat-log" aria-live="polite">

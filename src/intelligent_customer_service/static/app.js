@@ -4,7 +4,9 @@ const state = {
 
 const customerInput = document.querySelector("#customerId");
 const healthText = document.querySelector("#healthText");
+const llmText = document.querySelector("#llmText");
 const statusDot = document.querySelector(".status-dot");
+const llmDot = document.querySelector(".status-dot.llm");
 const ticketCount = document.querySelector("#ticketCount");
 const approvalCount = document.querySelector("#approvalCount");
 const chatLog = document.querySelector("#chatLog");
@@ -12,6 +14,8 @@ const chatForm = document.querySelector("#chatForm");
 const messageInput = document.querySelector("#messageInput");
 const toolOutput = document.querySelector("#toolOutput");
 const approvalList = document.querySelector("#approvalList");
+const modelPill = document.querySelector("#modelPill");
+const handoffBanner = document.querySelector("#handoffBanner");
 
 function customerId() {
   return customerInput.value.trim() || state.customerId;
@@ -54,16 +58,23 @@ async function refreshStatus() {
   }
 
   try {
-    const [tickets, approvals] = await Promise.all([
+    const [tickets, approvals, config] = await Promise.all([
       requestJson("/tickets"),
       requestJson("/approvals"),
+      requestJson("/config/status"),
     ]);
     ticketCount.textContent = tickets.length;
     approvalCount.textContent = approvals.length;
+    llmText.textContent = config.llm_ready ? `LLM ready: ${config.model}` : "LLM key missing";
+    modelPill.textContent = config.model || "OpenAI-compatible";
+    handoffBanner.querySelector("span").textContent = config.next_step;
+    llmDot.classList.toggle("ready", config.llm_ready);
     renderApprovals(approvals);
   } catch {
     ticketCount.textContent = "0";
     approvalCount.textContent = "0";
+    llmText.textContent = "Config unavailable";
+    llmDot.classList.remove("ready");
   }
 }
 

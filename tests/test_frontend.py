@@ -30,6 +30,9 @@ def test_homepage_serves_customer_service_console(tmp_path):
     assert response.status_code == 200
     assert "Enterprise Service Console" in response.text
     assert "app-shell" in response.text
+    assert "智能客服会话" in response.text
+    assert "�" not in response.text
+    assert "绯" not in response.text
 
 
 def test_static_css_is_served(tmp_path):
@@ -39,6 +42,16 @@ def test_static_css_is_served(tmp_path):
 
     assert response.status_code == 200
     assert "service-console" in response.text
+
+
+def test_static_javascript_is_served_without_garbled_text(tmp_path):
+    client = _client(tmp_path)
+
+    response = client.get("/static/app.js")
+
+    assert response.status_code == 200
+    assert "Chat service is not available" in response.text
+    assert "�" not in response.text
 
 
 def test_tool_endpoint_executes_local_business_tool(tmp_path):
@@ -52,3 +65,14 @@ def test_tool_endpoint_executes_local_business_tool(tmp_path):
     assert response.status_code == 200
     assert response.json()["ok"] is True
     assert response.json()["data"]["order_id"] == "ORD-1001"
+
+
+def test_config_status_endpoint_reports_llm_readiness(tmp_path):
+    client = _client(tmp_path)
+
+    response = client.get("/config/status")
+
+    assert response.status_code == 200
+    assert response.json()["provider"] == "OpenAI-compatible"
+    assert "llm_ready" in response.json()
+    assert "model" in response.json()

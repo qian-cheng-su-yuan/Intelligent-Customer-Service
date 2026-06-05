@@ -141,7 +141,7 @@ h3 {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 18px;
+  margin-bottom: 10px;
 }
 
 .status-dot {
@@ -153,6 +153,16 @@ h3 {
 
 .status-dot.ok {
   background: #66d19e;
+}
+
+.status-dot.llm.ready {
+  background: #66d19e;
+}
+
+.status-line.secondary {
+  margin-bottom: 18px;
+  color: #c6d6da;
+  font-size: 14px;
 }
 
 .metric-grid {
@@ -203,6 +213,23 @@ h3 {
   gap: 18px;
   margin-bottom: 20px;
   padding: 18px 20px;
+}
+
+.runbook-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-right: auto;
+}
+
+.runbook-strip span {
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  background: #f8fbfb;
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .customer-input {
@@ -266,6 +293,23 @@ h3 {
   background: var(--mint);
   font-size: 12px;
   font-weight: 800;
+}
+
+.handoff-banner {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border: 1px solid #d8ece6;
+  border-radius: 8px;
+  color: #234044;
+  background: #f0fbf7;
+  line-height: 1.45;
+}
+
+.handoff-banner span {
+  color: var(--muted);
+  font-size: 13px;
 }
 
 .chat-log {
