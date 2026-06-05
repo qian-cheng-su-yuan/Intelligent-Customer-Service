@@ -1,4 +1,9 @@
+from pathlib import Path
+from typing import Any
+
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from .agent import CustomerServiceAgent
 from .config import Settings, get_settings
@@ -24,6 +29,12 @@ def create_app(agent: CustomerServiceAgent | None = None, tools: CustomerService
         description="Tool Calling based customer service and ticket routing engine.",
         version="0.1.0",
     )
+    static_dir = Path(__file__).parent / "static"
+    app.mount("/static", StaticFiles(directory=static_dir), name="static")
+
+    @app.get("/", include_in_schema=False)
+    def frontend() -> FileResponse:
+        return FileResponse(static_dir / "index.html")
 
     if agent is None or tools is None:
         try:
@@ -51,6 +62,13 @@ def create_app(agent: CustomerServiceAgent | None = None, tools: CustomerService
                 detail="Missing DASHSCOPE_API_KEY or LLM_API_KEY. Configure .env before using /chat.",
             )
         return agent.chat(request.message, request.customer_id, request.conversation_id)
+
+    @app.post("/tools/{tool_name}")
+    def execute_tool(tool_name: str, arguments: dict[str, Any]) -> dict:
+        result = tools.execute(tool_name, arguments)
+        if not result.get("ok"):
+            raise HTTPException(status_code=400, detail=result)
+        return result
 
     @app.get("/tickets")
     def list_tickets() -> list[dict]:

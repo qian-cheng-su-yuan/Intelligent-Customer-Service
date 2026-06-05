@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Enterprise Service Console</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body class="service-console">
+    <main class="app-shell">
+      <aside class="sidebar">
+        <div class="brand-block">
+          <div class="brand-mark">ICS</div>
+          <div>
+            <p class="eyebrow">Tool Calling Agent</p>
+            <h1>Enterprise Service Console</h1>
+          </div>
+        </div>
+
+        <nav class="nav-list" aria-label="Workspace">
+          <button class="nav-item active" type="button">会话工作台</button>
+          <button class="nav-item" type="button">订单中心</button>
+          <button class="nav-item" type="button">审核队列</button>
+        </nav>
+
+        <section class="status-panel">
+          <p class="panel-label">Runtime</p>
+          <div class="status-line">
+            <span class="status-dot"></span>
+            <span id="healthText">Checking</span>
+          </div>
+          <div class="metric-grid">
+            <div>
+              <span class="metric-value" id="ticketCount">0</span>
+              <span class="metric-label">Tickets</span>
+            </div>
+            <div>
+              <span class="metric-value" id="approvalCount">0</span>
+              <span class="metric-label">Approvals</span>
+            </div>
+          </div>
+        </section>
+      </aside>
+
+      <section class="main-stage">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Customer ID</p>
+            <input id="customerId" class="customer-input" value="CUST-001" />
+          </div>
+          <div class="top-actions">
+            <a href="/docs" target="_blank" rel="noreferrer">API Docs</a>
+            <button id="refreshBtn" type="button">Refresh</button>
+          </div>
+        </header>
+
+        <section class="workspace-grid">
+          <div class="conversation-pane">
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">Live Agent</p>
+                <h2>智能客服会话</h2>
+              </div>
+              <span class="pill">Qwen compatible</span>
+            </div>
+
+            <div id="chatLog" class="chat-log" aria-live="polite">
+              <article class="message agent">
+                <p>您好，我可以处理订单查询、物流进度、售后报修和退款申请。</p>
+              </article>
+            </div>
+
+            <form id="chatForm" class="composer">
+              <input id="messageInput" value="帮我查询一下订单 ORD-1001" autocomplete="off" />
+              <button type="submit">Send</button>
+            </form>
+          </div>
+
+          <div class="operations-pane">
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">Operations</p>
+                <h2>业务工具</h2>
+              </div>
+            </div>
+
+            <div class="tool-grid">
+              <button class="tool-card" data-tool="query_order" type="button">
+                <span>订单查询</span>
+                <strong>ORD-1001</strong>
+              </button>
+              <button class="tool-card" data-tool="query_logistics" type="button">
+                <span>物流追踪</span>
+                <strong>SF Express</strong>
+              </button>
+              <button class="tool-card" data-tool="create_repair_ticket" type="button">
+                <span>售后报修</span>
+                <strong>Open Ticket</strong>
+              </button>
+              <button class="tool-card danger" data-tool="request_refund" type="button">
+                <span>大额退款</span>
+                <strong>Human Review</strong>
+              </button>
+            </div>
+
+            <section class="result-panel">
+              <div class="section-heading compact">
+                <h3>工具结果</h3>
+                <button id="clearResultBtn" type="button">Clear</button>
+              </div>
+              <pre id="toolOutput">{ "status": "ready" }</pre>
+            </section>
+
+            <section class="approval-panel">
+              <div class="section-heading compact">
+                <h3>人工审核</h3>
+                <button id="loadApprovalsBtn" type="button">Load</button>
+              </div>
+              <div id="approvalList" class="approval-list"></div>
+            </section>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>
