@@ -1,0 +1,73 @@
+from fastapi import FastAPI, HTTPException
+
+from .agent import CustomerServiceAgent
+from .config import Settings, get_settings
+from .database import initialize_database
+from .llm_client import MissingApiKeyError, OpenAICompatibleToolCallingClient
+from .repositories import CustomerServiceRepository
+from .schemas import ApproveRequest, ChatRequest, ChatResponse
+from .tools import CustomerServiceTools
+
+
+def build_default_components(settings: Settings | None = None) -> tuple[CustomerServiceAgent, CustomerServiceTools]:
+    resolved_settings = settings or get_settings()
+    initialize_database(resolved_settings.database_path, seed=True)
+    repository = CustomerServiceRepository(resolved_settings.database_path)
+    tools = CustomerServiceTools(repository, refund_review_threshold=resolved_settings.refund_review_threshold)
+    llm_client = OpenAICompatibleToolCallingClient(resolved_settings)
+    return CustomerServiceAgent(llm_client, tools), tools
+
+
+def create_app(agent: CustomerServiceAgent | None = None, tools: CustomerServiceTools | None = None) -> FastAPI:
+    app = FastAPI(
+        title="Enterprise Intelligent Customer Service",
+        description="Tool Calling based customer service and ticket routing engine.",
+        version="0.1.0",
+    )
+
+    if agent is None or tools is None:
+        try:
+            default_agent, default_tools = build_default_components()
+            agent = agent or default_agent
+            tools = tools or default_tools
+        except MissingApiKeyError:
+            agent = None
+            settings = get_settings()
+            initialize_database(settings.database_path, seed=True)
+            tools = tools or CustomerServiceTools(
+                CustomerServiceRepository(settings.database_path),
+                refund_review_threshold=settings.refund_review_threshold,
+            )
+
+    @app.get("/health")
+    def health() -> dict[str, str]:
+        return {"status": "ok"}
+
+    @app.post("/chat", response_model=ChatResponse)
+    def chat(request: ChatRequest) -> dict:
+        if agent is None:
+            raise HTTPException(
+                status_code=503,
+                detail="Missing DASHSCOPE_API_KEY or LLM_API_KEY. Configure .env before using /chat.",
+            )
+        return agent.chat(request.message, request.customer_id, request.conversation_id)
+
+    @app.get("/tickets")
+    def list_tickets() -> list[dict]:
+        return tools.repository.list_tickets()
+
+    @app.get("/approvals")
+    def list_pending_approvals() -> list[dict]:
+        return tools.repository.list_pending_approvals()
+
+    @app.post("/approvals/{approval_id}/approve")
+    def approve_refund(approval_id: int, request: ApproveRequest) -> dict:
+        try:
+            return tools.repository.approve_pending_refund(approval_id, request.reviewer)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    return app
+
+
+app = create_app()
