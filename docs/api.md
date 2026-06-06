@@ -108,6 +108,24 @@ Returns after-sales repair tickets.
 
 Returns pending high-risk operations.
 
+## GET `/refunds`
+
+Returns refund history ordered by latest record first.
+
+```json
+[
+  {
+    "id": 1,
+    "order_id": "ORD-1001",
+    "customer_id": "CUST-001",
+    "amount": 899.0,
+    "reason": "quality issue",
+    "status": "processing",
+    "created_at": "2026-06-06 18:30:00"
+  }
+]
+```
+
 ## POST `/approvals/{approval_id}/approve`
 
 Approves a pending refund.

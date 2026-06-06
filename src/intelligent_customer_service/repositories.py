@@ -88,6 +88,9 @@ class CustomerServiceRepository:
             raise ValueError(f"refund {refund_id} not found")
         return refund
 
+    def list_refunds(self) -> list[dict[str, Any]]:
+        return self._fetch_all("SELECT * FROM refunds ORDER BY id DESC")
+
     def create_pending_approval(self, action: str, payload: dict[str, Any], risk_reason: str) -> dict[str, Any]:
         with connect(self.database_path) as connection:
             cursor = connection.execute(
@@ -115,14 +118,25 @@ class CustomerServiceRepository:
         return approvals
 
     def approve_pending_refund(self, approval_id: int, reviewer: str) -> dict[str, Any]:
-        approval = self.get_approval(approval_id)
-        if approval["status"] != "pending":
-            raise ValueError(f"approval {approval_id} has already been {approval['status']}")
-        if approval["action"] != "request_refund":
-            raise ValueError(f"approval {approval_id} is not a refund action")
-
-        refund = self.create_refund(approval["payload"])
         with connect(self.database_path) as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            row = connection.execute("SELECT * FROM pending_approvals WHERE id = ?", (approval_id,)).fetchone()
+            if row is None:
+                raise ValueError(f"approval {approval_id} not found")
+            approval = dict(row)
+            if approval["status"] != "pending":
+                raise ValueError(f"approval {approval_id} has already been {approval['status']}")
+            if approval["action"] != "request_refund":
+                raise ValueError(f"approval {approval_id} is not a refund action")
+
+            payload = json.loads(approval["payload_json"])
+            refund_cursor = connection.execute(
+                """
+                INSERT INTO refunds(order_id, customer_id, amount, reason)
+                VALUES (?, ?, ?, ?)
+                """,
+                (payload["order_id"], payload["customer_id"], payload["amount"], payload["reason"]),
+            )
             connection.execute(
                 """
                 UPDATE pending_approvals
@@ -131,6 +145,10 @@ class CustomerServiceRepository:
                 """,
                 (reviewer, approval_id),
             )
+            refund_id = refund_cursor.lastrowid
             connection.commit()
         updated = self.get_approval(approval_id)
+        refund = self._fetch_one("SELECT * FROM refunds WHERE id = ?", (refund_id,))
+        if refund is None:
+            raise ValueError(f"refund {refund_id} not found")
         return {"status": updated["status"], "approval": updated, "refund": refund}

@@ -12,56 +12,79 @@
         <div class="brand-block">
           <div class="brand-mark">ICS</div>
           <div>
-            <p class="eyebrow">Tool Calling Agent</p>
+            <p class="eyebrow">Interview Demo Console</p>
             <h1>Enterprise Service Console</h1>
           </div>
         </div>
 
         <nav class="nav-list" aria-label="Workspace">
           <button class="nav-item active" type="button">会话工作台</button>
-          <button class="nav-item" type="button">订单中心</button>
-          <button class="nav-item" type="button">审核队列</button>
+          <button class="nav-item" type="button">业务工具</button>
+          <button class="nav-item" type="button">人工审核</button>
         </nav>
 
-        <section class="status-panel">
+        <section class="runtime-panel">
           <p class="panel-label">Runtime</p>
           <div class="status-line">
-            <span class="status-dot"></span>
+            <span class="status-dot" id="runtimeDot"></span>
             <span id="healthText">Checking</span>
           </div>
           <div class="status-line secondary">
-            <span class="status-dot llm"></span>
+            <span class="status-dot llm" id="llmDot"></span>
             <span id="llmText">LLM checking</span>
           </div>
-          <div class="metric-grid">
-            <div>
-              <span class="metric-value" id="ticketCount">0</span>
-              <span class="metric-label">Tickets</span>
-            </div>
-            <div>
-              <span class="metric-value" id="approvalCount">0</span>
-              <span class="metric-label">Approvals</span>
-            </div>
+          <div class="threshold-box">
+            <span>Refund review threshold</span>
+            <strong id="thresholdValue">500</strong>
           </div>
+        </section>
+
+        <section class="chain-panel">
+          <p class="panel-label">Agent Tool Chain</p>
+          <ol class="chain-list">
+            <li>用户意图识别</li>
+            <li>JSON Schema 工具选择</li>
+            <li>Pydantic 参数校验</li>
+            <li>SQLite 业务执行</li>
+            <li>高风险人工审核</li>
+          </ol>
         </section>
       </aside>
 
       <section class="main-stage">
         <header class="topbar">
           <div>
-            <p class="eyebrow">Customer ID</p>
-            <input id="customerId" class="customer-input" value="CUST-001" />
+            <p class="eyebrow">Tool Calling Customer Service Agent</p>
+            <h2>企业智能客服与工单路由引擎</h2>
           </div>
-          <div class="runbook-strip">
-            <span>1. 配置 .env</span>
-            <span>2. 初始化数据库</span>
-            <span>3. 启动服务</span>
+          <div class="operator-strip">
+            <label for="customerId">Customer ID</label>
+            <input id="customerId" class="customer-input" value="CUST-001" />
           </div>
           <div class="top-actions">
             <a href="/docs" target="_blank" rel="noreferrer">API Docs</a>
             <button id="refreshBtn" type="button">Refresh</button>
           </div>
         </header>
+
+        <section class="metric-row" aria-label="Demo metrics">
+          <article class="metric-card">
+            <span>Demo Orders</span>
+            <strong>3</strong>
+          </article>
+          <article class="metric-card">
+            <span>Tickets</span>
+            <strong id="ticketCount">0</strong>
+          </article>
+          <article class="metric-card">
+            <span>Approvals</span>
+            <strong id="approvalCount">0</strong>
+          </article>
+          <article class="metric-card">
+            <span>Refunds</span>
+            <strong id="refundCount">0</strong>
+          </article>
+        </section>
 
         <section class="workspace-grid">
           <div class="conversation-pane">
@@ -70,17 +93,17 @@
                 <p class="eyebrow">Live Agent</p>
                 <h2>智能客服会话</h2>
               </div>
-              <span class="pill" id="modelPill">Qwen compatible</span>
+              <span class="pill" id="modelPill">OpenAI-compatible</span>
             </div>
 
             <div class="handoff-banner" id="handoffBanner">
-              <strong>交付演示模式</strong>
-              <span>未配置 API Key 时，可使用右侧业务工具完成订单、物流、工单、退款审核演示。</span>
+              <strong>真实 LLM Tool Calling</strong>
+              <span>填写 API Key 后，会话会调用真实模型并触发后端工具。</span>
             </div>
 
             <div id="chatLog" class="chat-log" aria-live="polite">
               <article class="message agent">
-                <p>您好，我可以处理订单查询、物流进度、售后报修和退款申请。</p>
+                <p>您好，我可以处理订单查询、物流追踪、售后报修和退款申请。</p>
               </article>
             </div>
 
@@ -90,10 +113,10 @@
             </form>
           </div>
 
-          <div class="operations-pane">
+          <aside class="operations-pane">
             <div class="section-heading">
               <div>
-                <p class="eyebrow">Operations</p>
+                <p class="eyebrow">Business Tools</p>
                 <h2>业务工具</h2>
               </div>
             </div>
@@ -124,15 +147,42 @@
               </div>
               <pre id="toolOutput">{ "status": "ready" }</pre>
             </section>
+          </aside>
+        </section>
 
-            <section class="approval-panel">
-              <div class="section-heading compact">
-                <h3>人工审核</h3>
-                <button id="loadApprovalsBtn" type="button">Load</button>
+        <section class="records-grid">
+          <article class="record-panel">
+            <div class="section-heading compact">
+              <div>
+                <p class="eyebrow">After-sales</p>
+                <h3>售后工单</h3>
               </div>
-              <div id="approvalList" class="approval-list"></div>
-            </section>
-          </div>
+              <span class="mini-pill" id="ticketBadge">0</span>
+            </div>
+            <div id="ticketList" class="record-list"></div>
+          </article>
+
+          <article class="record-panel emphasis">
+            <div class="section-heading compact">
+              <div>
+                <p class="eyebrow">Human-in-the-loop</p>
+                <h3>人工审核</h3>
+              </div>
+              <button id="loadApprovalsBtn" type="button">Load</button>
+            </div>
+            <div id="approvalList" class="record-list"></div>
+          </article>
+
+          <article class="record-panel">
+            <div class="section-heading compact">
+              <div>
+                <p class="eyebrow">Refund History</p>
+                <h3>退款记录</h3>
+              </div>
+              <span class="mini-pill" id="refundBadge">0</span>
+            </div>
+            <div id="refundList" class="record-list"></div>
+          </article>
         </section>
       </section>
     </main>

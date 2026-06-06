@@ -89,6 +89,10 @@ def create_app(agent: CustomerServiceAgent | None = None, tools: CustomerService
     def list_tickets() -> list[dict]:
         return tools.repository.list_tickets()
 
+    @app.get("/refunds")
+    def list_refunds() -> list[dict]:
+        return tools.repository.list_refunds()
+
     @app.get("/approvals")
     def list_pending_approvals() -> list[dict]:
         return tools.repository.list_pending_approvals()

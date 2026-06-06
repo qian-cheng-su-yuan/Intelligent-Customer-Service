@@ -1,28 +1,30 @@
 # Enterprise Intelligent Customer Service
 
-基于 Tool Calling 的企业智能客服与工单路由引擎。项目面向企业客服常见场景，支持订单查询、物流查询、售后报修、退款申请和高风险操作人工审核，适合作为 AI Agent / 大模型应用开发 / Python 后端开发方向的可交付作品。
+基于 Tool Calling 的企业智能客服与工单路由引擎。项目面向企业客服场景，支持订单查询、物流追踪、售后报修、退款申请和 Human-in-the-loop 大额退款审核，适合作为 AI Agent / 大模型应用开发 / Python 后端开发方向的面试演示项目。
 
-项目已包含可视化前端工作台、FastAPI 后端、SQLite 演示数据、CLI 演示命令、pytest 自动化测试和详细文档。填写必要的模型 API Key 后，可以跑通真实 Qwen 百炼 OpenAI 兼容 Tool Calling；没有 API Key 时，也可以通过前端右侧业务工具完整演示本地闭环。
+项目包含专业客服工作台前端、FastAPI 后端、SQLite 演示数据、OpenAI-compatible Tool Calling、Pydantic 参数校验、CLI 命令、pytest 自动化测试和面试演示文档。填写真实模型 API Key 后，可以通过聊天框跑通真实 Qwen / DeepSeek 等 OpenAI 兼容模型的 Tool Calling；未填写 Key 时，右侧本地业务工具仍可完整演示订单、物流、工单、退款审核和退款记录闭环。
 
-## 功能亮点
+## 项目亮点
 
-- 美观 UI 工作台：首页 `/` 提供会话、业务工具、运行状态和人工审核队列。
-- 真实 Tool Calling：使用 OpenAI Python SDK 对接 Qwen 百炼 OpenAI 兼容接口。
-- 本地可演示：SQLite 内置订单和物流数据，开箱即可演示查询、工单、退款审核。
-- 参数强校验：Pydantic 校验订单号、客户 ID、退款金额、联系方式等参数。
-- 风险控制：大额退款进入 Human-in-the-loop 审核，审批后才写入退款记录。
-- 工程化交付：标准 `src/` 结构、测试、文档、环境示例和 GitHub 可读说明。
+- 企业客服工作台：首屏展示 Runtime、LLM 状态、工单数、审核数、退款记录和 Agent Tool Chain。
+- 真实 Tool Calling：使用 OpenAI Python SDK 对接 Qwen 百炼、DeepSeek 等 OpenAI 兼容接口。
+- 参数强校验：使用 Pydantic 校验订单号、客户 ID、退款金额、原因和联系方式。
+- 本地业务闭环：SQLite 内置订单、物流、工单、待审批和退款记录表。
+- 风险控制：大额退款先进入人工审核队列，审批通过后才创建退款记录。
+- 面试可演示：提供 README、交付指南、面试演示脚本、CLI 和测试命令。
 
 ## 技术栈
 
-- Python 3.10+
+- Python 3.10 到 3.12
 - FastAPI + Uvicorn
 - OpenAI Python SDK
 - Pydantic + pydantic-settings
 - SQLite
 - Typer + Rich
-- 原生 HTML/CSS/JavaScript 前端
+- 原生 HTML / CSS / JavaScript
 - pytest + httpx
+
+> 不建议使用 Python 3.13 / 3.14。部分二进制依赖可能在新版解释器上出现 `pydantic_core` DLL 加载失败。
 
 ## 项目结构
 
@@ -32,42 +34,32 @@
 │   ├── api.md
 │   ├── architecture.md
 │   ├── delivery-guide.md
+│   ├── interview-demo.md
 │   └── tool-calling-flow.md
 ├── scripts/
 │   └── init_db.py
-├── src/
-│   └── intelligent_customer_service/
-│       ├── agent.py
-│       ├── api.py
-│       ├── cli.py
-│       ├── config.py
-│       ├── database.py
-│       ├── db.py
-│       ├── llm_client.py
-│       ├── repositories.py
-│       ├── schemas.py
-│       ├── static/
-│       │   ├── app.js
-│       │   ├── index.html
-│       │   └── styles.css
-│       └── tools.py
+├── src/intelligent_customer_service/
+│   ├── agent.py
+│   ├── api.py
+│   ├── cli.py
+│   ├── config.py
+│   ├── database.py
+│   ├── db.py
+│   ├── llm_client.py
+│   ├── repositories.py
+│   ├── schemas.py
+│   ├── static/
+│   │   ├── app.js
+│   │   ├── index.html
+│   │   └── styles.css
+│   └── tools.py
 ├── tests/
 ├── .env.example
 ├── pyproject.toml
 └── README.md
 ```
 
-## 快速运行
-
-### 1. 安装依赖
-
-```bash
-python -m pip install -e ".[dev]"
-```
-
-建议使用 Python 3.10 到 3.12。不要使用 Python alpha / preview 版本。
-
-### 2. 配置环境变量
+## 需要填写的信息
 
 复制环境变量模板：
 
@@ -75,13 +67,7 @@ python -m pip install -e ".[dev]"
 copy .env.example .env
 ```
 
-Linux / macOS：
-
-```bash
-cp .env.example .env
-```
-
-编辑 `.env`：
+### 方案 A：Qwen 百炼
 
 ```env
 DASHSCOPE_API_KEY=your_dashscope_api_key
@@ -92,30 +78,31 @@ DATABASE_PATH=data/customer_service.db
 REFUND_REVIEW_THRESHOLD=500
 ```
 
-默认使用 Qwen 百炼 OpenAI 兼容接口。官方文档参考：
-[阿里云百炼 OpenAI 兼容说明](https://help.aliyun.com/zh/model-studio/compatibility-of-openai-with-dashscope)。
-
-如果使用 DeepSeek，可改为：
+### 方案 B：DeepSeek 或其他 OpenAI 兼容模型
 
 ```env
-LLM_API_KEY=your_deepseek_api_key
+DASHSCOPE_API_KEY=
+LLM_API_KEY=your_api_key
 LLM_BASE_URL=https://api.deepseek.com
 LLM_MODEL=deepseek-chat
+DATABASE_PATH=data/customer_service.db
+REFUND_REVIEW_THRESHOLD=500
 ```
 
-DeepSeek Function Calling 参考：
-[DeepSeek Function Calling](https://api-docs.deepseek.com/guides/function_calling)。
+说明：
 
-### 3. 初始化数据库
+- `DASHSCOPE_API_KEY` 和 `LLM_API_KEY` 任填一个即可。
+- `LLM_API_KEY` 优先级高于 `DASHSCOPE_API_KEY`。
+- 不填写 API Key 时，`/chat` 会返回配置提示；本地业务工具不依赖模型，仍可演示核心闭环。
 
-```bash
-python -m intelligent_customer_service.db init --seed
-```
+## Windows 快速启动
 
-### 4. 启动服务
+建议显式使用 Python 3.11：
 
-```bash
-uvicorn intelligent_customer_service.api:app --reload
+```powershell
+py -3.11 -m pip install -e ".[dev]"
+py -3.11 -m intelligent_customer_service.db init --seed
+py -3.11 -m uvicorn intelligent_customer_service.api:app --reload
 ```
 
 打开前端工作台：
@@ -124,144 +111,91 @@ uvicorn intelligent_customer_service.api:app --reload
 http://127.0.0.1:8000/
 ```
 
-打开 API 文档：
+打开 Swagger API 文档：
 
 ```text
 http://127.0.0.1:8000/docs
 ```
 
-## 前端演示步骤
+## 面试演示流程
 
-1. 打开 `http://127.0.0.1:8000/`。
-2. 确认左侧 Runtime 显示 `Online`。
-3. 如已填写 API Key，LLM 状态会显示 `LLM ready: qwen-plus`。
-4. 在会话框输入：`帮我查询一下订单 ORD-1001`，点击 `Send`。
-5. 点击右侧 `订单查询`，查看结构化订单结果。
-6. 点击 `物流追踪`，查看物流状态。
-7. 点击 `售后报修`，生成售后工单。
-8. 点击 `大额退款`，系统生成待审核记录。
-9. 在人工审核区域点击 `Approve`，退款记录进入 `processing` 状态。
+1. 打开 `http://127.0.0.1:8000/`，展示 Runtime、LLM 状态、指标卡和 Agent Tool Chain。
+2. 点击 `订单查询`，展示 `ORD-1001` 的订单金额、商品名和客户归属。
+3. 点击 `物流追踪`，展示承运商、运单号和最新物流事件。
+4. 点击 `售后报修`，创建售后工单，观察 Tickets 指标和售后工单列表变化。
+5. 点击 `大额退款`，系统返回 `requires_approval = true`，人工审核列表出现待审批记录。
+6. 点击 `Approve`，待审批记录清空，退款记录列表新增一条 `processing` 状态退款。
+7. 如果已填写真实 API Key，在聊天框输入 `帮我查询一下订单 ORD-1001`，展示模型选择工具、后端校验参数、查询 SQLite 并返回结果的完整链路。
 
-没有 API Key 时，第 4 步 `/chat` 会提示配置缺失，但第 5 到第 9 步仍然可以完整跑通本地业务闭环。
+更详细的讲解脚本见 [docs/interview-demo.md](docs/interview-demo.md)。
 
-## CLI 演示步骤
+## CLI 演示
 
-直接调用本地业务工具，不消耗 LLM token：
+本地业务工具不消耗 LLM token：
 
-```bash
-ics tool query_order --order-id ORD-1001 --customer-id CUST-001
-ics tool query_logistics --order-id ORD-1001 --customer-id CUST-001
-ics tool create_repair_ticket --order-id ORD-1001 --customer-id CUST-001 --issue-type hardware --description "Noise cancelling is unstable" --contact 19838622783
-ics tool request_refund --order-id ORD-1001 --customer-id CUST-001 --amount 899 --reason "quality issue"
-ics approvals
-ics approve 1 --reviewer admin
+```powershell
+py -3.11 -m intelligent_customer_service.cli tool query_order --order-id ORD-1001 --customer-id CUST-001
+py -3.11 -m intelligent_customer_service.cli tool query_logistics --order-id ORD-1001 --customer-id CUST-001
+py -3.11 -m intelligent_customer_service.cli tool create_repair_ticket --order-id ORD-1001 --customer-id CUST-001 --issue-type hardware --description "Noise cancelling is unstable" --contact 19838622783
+py -3.11 -m intelligent_customer_service.cli tool request_refund --order-id ORD-1001 --customer-id CUST-001 --amount 899 --reason "quality issue"
+py -3.11 -m intelligent_customer_service.cli approvals
 ```
 
 真实 LLM Tool Calling：
 
-```bash
-ics chat "帮我查询一下订单 ORD-1001" --customer-id CUST-001
+```powershell
+py -3.11 -m intelligent_customer_service.cli chat "帮我查询一下订单 ORD-1001" --customer-id CUST-001
 ```
 
-## API 示例
+## API 摘要
 
-健康检查：
-
-```bash
-curl http://127.0.0.1:8000/health
-```
-
-配置状态：
-
-```bash
-curl http://127.0.0.1:8000/config/status
-```
-
-智能客服对话：
-
-```bash
-curl -X POST http://127.0.0.1:8000/chat ^
-  -H "Content-Type: application/json" ^
-  -d "{\"message\":\"帮我查询一下订单 ORD-1001\",\"customer_id\":\"CUST-001\"}"
-```
-
-本地工具调用：
-
-```bash
-curl -X POST http://127.0.0.1:8000/tools/query_order ^
-  -H "Content-Type: application/json" ^
-  -d "{\"order_id\":\"ORD-1001\",\"customer_id\":\"CUST-001\"}"
-```
-
-审批大额退款：
-
-```bash
-curl -X POST http://127.0.0.1:8000/approvals/1/approve ^
-  -H "Content-Type: application/json" ^
-  -d "{\"reviewer\":\"admin\"}"
-```
-
-## Tool Calling 设计
-
-系统向大模型暴露 4 个工具：
-
-| 工具名 | 功能 | 关键参数 |
-| --- | --- | --- |
-| `query_order` | 查询订单信息 | `order_id`, `customer_id` |
-| `query_logistics` | 查询物流状态 | `order_id`, `customer_id` |
-| `create_repair_ticket` | 创建售后报修工单 | `order_id`, `issue_type`, `description`, `contact` |
-| `request_refund` | 申请退款 | `order_id`, `amount`, `reason` |
-
-工具参数由 Pydantic 模型生成 JSON Schema。模型返回 Tool Call 后，后端会再次使用 Pydantic 做强校验，避免缺字段、金额非法、客户越权等问题直接进入业务执行。
-
-## 数据库设计
-
-- `orders`：订单模拟数据
-- `logistics`：物流模拟数据
-- `repair_tickets`：售后工单
-- `refunds`：退款记录
-- `pending_approvals`：高风险操作人工审核队列
-
-内置演示数据：
-
-- `ORD-1001` / `CUST-001`
-- `ORD-1002` / `CUST-001`
-- `ORD-2001` / `CUST-002`
+- `GET /`：前端工作台。
+- `GET /health`：服务健康检查。
+- `GET /config/status`：模型配置状态，不暴露密钥。
+- `POST /chat`：真实 LLM Agent 对话。
+- `POST /tools/{tool_name}`：本地业务工具调用。
+- `GET /tickets`：售后工单列表。
+- `GET /approvals`：待审批高风险操作。
+- `POST /approvals/{approval_id}/approve`：审批大额退款。
+- `GET /refunds`：退款记录列表。
 
 ## 测试与验收
 
-运行测试：
-
-```bash
-python -m pytest
+```powershell
+py -3.11 -m pytest -q
 ```
 
-验收点：
+验收标准：
 
-- 首页 `/` 可打开，并显示漂亮的客服工作台。
-- `/config/status` 能显示模型配置状态。
-- 订单查询、物流追踪、售后报修、大额退款审核能通过前端跑通。
-- 配置 API Key 后，`/chat` 能调用真实 LLM 并触发 Tool Calling。
-- 所有测试通过。
+- 测试全部通过。
+- 首页 `/` 可访问，页面中文无乱码。
+- `/docs` 可访问 Swagger 文档。
+- 不配置 API Key 时，本地业务工具链路能完整跑通。
+- 配置 API Key 后，`/chat` 能调用真实模型并触发 Tool Calling。
+- 大额退款必须先进入人工审核，审批通过后才出现在退款记录中。
 
 ## 常见问题
 
 ### `/chat` 返回 503
 
-说明未配置 `DASHSCOPE_API_KEY` 或 `LLM_API_KEY`。复制 `.env.example` 为 `.env` 后填写真实 key。
+说明没有配置 `DASHSCOPE_API_KEY` 或 `LLM_API_KEY`。复制 `.env.example` 为 `.env` 后填写真实 Key，再重启服务。
 
-### 前端可以打开，但大模型不可用
+### 本地工具能用，但聊天框不可用
 
-这是正常的交付演示模式。右侧业务工具不依赖模型，可以先演示本地闭环；配置 key 后再演示真实 Tool Calling。
+这是正常情况。聊天框依赖真实 LLM API Key；右侧业务工具直接调用本地 FastAPI 和 SQLite，不依赖模型。
 
-### 默认 Python 跑测试报 Pydantic DLL 错误
+### Python 3.14 下测试报 DLL 错误
 
-通常是使用了 Python alpha / preview 版本。请切换到 Python 3.10 到 3.12。
+请切换到 Python 3.10 到 3.12。Windows 推荐命令：
+
+```powershell
+py -3.11 -m pytest -q
+```
 
 ## 可扩展方向
 
-- 接入真实订单系统、物流系统和 CRM。
+- 接入真实订单、物流和 CRM 系统。
 - 增加 Redis 会话记忆和多轮上下文持久化。
-- 使用 LangGraph 编排复杂客服流程。
-- 将人工审核扩展为管理后台。
+- 使用 LangGraph 编排更复杂的客服状态机。
 - 接入向量库，实现客服知识库 RAG 问答。
+- 增加管理员后台、审计日志和权限控制。
