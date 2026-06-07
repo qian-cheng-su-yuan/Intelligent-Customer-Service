@@ -11,7 +11,7 @@ from .llm_client import OpenAICompatibleToolCallingClient
 from .repositories import CustomerServiceRepository
 from .tools import CustomerServiceTools
 
-app = typer.Typer(help="Enterprise intelligent customer service demo CLI.")
+app = typer.Typer(help="Enterprise intelligent customer service operations CLI.")
 console = Console()
 
 
@@ -80,6 +80,12 @@ def approvals() -> None:
 @app.command()
 def approve(approval_id: int, reviewer: str = typer.Option("admin", "--reviewer")) -> None:
     result = _tools().repository.approve_pending_refund(approval_id, reviewer)
+    console.print_json(data=result)
+
+
+@app.command()
+def reject(approval_id: int, reviewer: str = typer.Option("admin", "--reviewer")) -> None:
+    result = _tools().repository.reject_pending_refund(approval_id, reviewer)
     console.print_json(data=result)
 
 

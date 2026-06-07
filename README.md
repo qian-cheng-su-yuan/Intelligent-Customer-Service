@@ -1,17 +1,17 @@
 # Enterprise Intelligent Customer Service
 
-基于 Tool Calling 的企业智能客服与工单路由引擎。项目面向企业客服场景，支持订单查询、物流追踪、售后报修、退款申请和 Human-in-the-loop 大额退款审核，适合作为 AI Agent / 大模型应用开发 / Python 后端开发方向的面试演示项目。
+基于 Tool Calling 的企业智能客服与工单路由引擎。项目面向企业客服与售后运营场景，支持订单查询、物流追踪、售后报修、退款申请、人工审核和退款记录追踪，是一份可交付项目，具备清晰的运行配置、业务闭环和验收标准。
 
-项目包含专业客服工作台前端、FastAPI 后端、SQLite 演示数据、OpenAI-compatible Tool Calling、Pydantic 参数校验、CLI 命令、pytest 自动化测试和面试演示文档。填写真实模型 API Key 后，可以通过聊天框跑通真实 Qwen / DeepSeek 等 OpenAI 兼容模型的 Tool Calling；未填写 Key 时，右侧本地业务工具仍可完整演示订单、物流、工单、退款审核和退款记录闭环。
+系统由 FastAPI 后端、SQLite 业务数据、OpenAI-compatible 大模型调用、Pydantic 参数校验、原生 Web 运营工作台和自动化测试组成。填写真实模型 API Key 后，客服会话可以调用 Qwen / DeepSeek 等兼容 OpenAI SDK 的模型并触发 Tool Calling；未填写 API Key 时，订单、物流、工单、审批和退款记录等本地业务能力仍可完整运行，便于交付验收和故障排查。
 
-## 项目亮点
+## 项目能力
 
-- 企业客服工作台：首屏展示 Runtime、LLM 状态、工单数、审核数、退款记录和 Agent Tool Chain。
-- 真实 Tool Calling：使用 OpenAI Python SDK 对接 Qwen 百炼、DeepSeek 等 OpenAI 兼容接口。
-- 参数强校验：使用 Pydantic 校验订单号、客户 ID、退款金额、原因和联系方式。
-- 本地业务闭环：SQLite 内置订单、物流、工单、待审批和退款记录表。
-- 风险控制：大额退款先进入人工审核队列，审批通过后才创建退款记录。
-- 面试可演示：提供 README、交付指南、面试演示脚本、CLI 和测试命令。
+- 运营工作台：展示服务状态、模型配置、订单、工单、待审核、退款记录和 Agent 工作流。
+- 真实 Tool Calling：大模型返回工具调用后，后端解析参数、校验参数并执行业务工具。
+- 参数安全边界：使用 Pydantic 对订单号、客户 ID、金额、退款原因和联系方式做强校验。
+- 业务数据闭环：SQLite 管理订单、物流、售后工单、待审核操作和退款记录。
+- Human-in-the-loop：大额退款必须先进入人工审核，可审批通过或拒绝。
+- 工程化交付：提供 API 文档、运行指南、交付验收步骤、CLI 命令和 pytest 测试。
 
 ## 技术栈
 
@@ -24,50 +24,17 @@
 - 原生 HTML / CSS / JavaScript
 - pytest + httpx
 
-> 不建议使用 Python 3.13 / 3.14。部分二进制依赖可能在新版解释器上出现 `pydantic_core` DLL 加载失败。
-
-## 项目结构
-
-```text
-.
-├── docs/
-│   ├── api.md
-│   ├── architecture.md
-│   ├── delivery-guide.md
-│   ├── interview-demo.md
-│   └── tool-calling-flow.md
-├── scripts/
-│   └── init_db.py
-├── src/intelligent_customer_service/
-│   ├── agent.py
-│   ├── api.py
-│   ├── cli.py
-│   ├── config.py
-│   ├── database.py
-│   ├── db.py
-│   ├── llm_client.py
-│   ├── repositories.py
-│   ├── schemas.py
-│   ├── static/
-│   │   ├── app.js
-│   │   ├── index.html
-│   │   └── styles.css
-│   └── tools.py
-├── tests/
-├── .env.example
-├── pyproject.toml
-└── README.md
-```
+> 建议使用 Python 3.10 到 3.12。不要使用 Python 3.13 / 3.14 作为交付运行环境，部分二进制依赖可能出现 `pydantic_core` DLL 加载问题。
 
 ## 需要填写的信息
 
-复制环境变量模板：
+复制配置模板：
 
 ```powershell
 copy .env.example .env
 ```
 
-### 方案 A：Qwen 百炼
+### Qwen 百炼
 
 ```env
 DASHSCOPE_API_KEY=your_dashscope_api_key
@@ -78,7 +45,7 @@ DATABASE_PATH=data/customer_service.db
 REFUND_REVIEW_THRESHOLD=500
 ```
 
-### 方案 B：DeepSeek 或其他 OpenAI 兼容模型
+### DeepSeek 或其他 OpenAI 兼容模型
 
 ```env
 DASHSCOPE_API_KEY=
@@ -89,15 +56,14 @@ DATABASE_PATH=data/customer_service.db
 REFUND_REVIEW_THRESHOLD=500
 ```
 
-说明：
+配置说明：
 
 - `DASHSCOPE_API_KEY` 和 `LLM_API_KEY` 任填一个即可。
-- `LLM_API_KEY` 优先级高于 `DASHSCOPE_API_KEY`。
-- 不填写 API Key 时，`/chat` 会返回配置提示；本地业务工具不依赖模型，仍可演示核心闭环。
+- 如果两个都填写，系统优先使用 `LLM_API_KEY`。
+- `DATABASE_PATH` 是 SQLite 数据库路径。
+- `REFUND_REVIEW_THRESHOLD` 是退款人工审核阈值，默认 `500`。
 
 ## Windows 快速启动
-
-建议显式使用 Python 3.11：
 
 ```powershell
 py -3.11 -m pip install -e ".[dev]"
@@ -105,7 +71,7 @@ py -3.11 -m intelligent_customer_service.db init --seed
 py -3.11 -m uvicorn intelligent_customer_service.api:app --reload
 ```
 
-打开前端工作台：
+打开运营工作台：
 
 ```text
 http://127.0.0.1:8000/
@@ -117,21 +83,35 @@ http://127.0.0.1:8000/
 http://127.0.0.1:8000/docs
 ```
 
-## 面试演示流程
+## 运行验收流程
 
-1. 打开 `http://127.0.0.1:8000/`，展示 Runtime、LLM 状态、指标卡和 Agent Tool Chain。
-2. 点击 `订单查询`，展示 `ORD-1001` 的订单金额、商品名和客户归属。
-3. 点击 `物流追踪`，展示承运商、运单号和最新物流事件。
-4. 点击 `售后报修`，创建售后工单，观察 Tickets 指标和售后工单列表变化。
-5. 点击 `大额退款`，系统返回 `requires_approval = true`，人工审核列表出现待审批记录。
-6. 点击 `Approve`，待审批记录清空，退款记录列表新增一条 `processing` 状态退款。
-7. 如果已填写真实 API Key，在聊天框输入 `帮我查询一下订单 ORD-1001`，展示模型选择工具、后端校验参数、查询 SQLite 并返回结果的完整链路。
+1. 打开首页，确认 Runtime 为 `Online`。
+2. 查看订单记录，确认系统已加载内置订单数据。
+3. 点击 `订单查询`，结果面板返回订单结构化数据。
+4. 点击 `物流追踪`，返回承运商、运单号和最新物流事件。
+5. 点击 `售后报修`，创建工单后 `Tickets` 指标和售后工单列表刷新。
+6. 点击 `大额退款`，系统创建待审核记录，不直接创建退款。
+7. 在人工审核区域点击 `Approve`，退款记录列表新增 `processing` 退款。
+8. 再次触发大额退款后点击 `Reject`，审核状态变为 rejected，退款记录不新增。
+9. 填写真实 API Key 后，在会话框输入 `帮我查询一下订单 ORD-1001`，验证真实 LLM Tool Calling。
 
-更详细的讲解脚本见 [docs/interview-demo.md](docs/interview-demo.md)。
+更完整的交付运行说明见 [docs/operation-guide.md](docs/operation-guide.md)。
 
-## CLI 演示
+## API 摘要
 
-本地业务工具不消耗 LLM token：
+- `GET /`：运营工作台。
+- `GET /health`：服务健康检查。
+- `GET /config/status`：模型配置状态，不暴露密钥。
+- `POST /chat`：真实 LLM Agent 对话。
+- `POST /tools/{tool_name}`：本地业务工具调用。
+- `GET /orders`：订单列表。
+- `GET /tickets`：售后工单列表。
+- `GET /approvals`：待审批高风险操作。
+- `POST /approvals/{approval_id}/approve`：审批通过大额退款。
+- `POST /approvals/{approval_id}/reject`：拒绝大额退款。
+- `GET /refunds`：退款记录列表。
+
+## CLI 命令
 
 ```powershell
 py -3.11 -m intelligent_customer_service.cli tool query_order --order-id ORD-1001 --customer-id CUST-001
@@ -141,25 +121,13 @@ py -3.11 -m intelligent_customer_service.cli tool request_refund --order-id ORD-
 py -3.11 -m intelligent_customer_service.cli approvals
 ```
 
-真实 LLM Tool Calling：
+真实 LLM 对话：
 
 ```powershell
 py -3.11 -m intelligent_customer_service.cli chat "帮我查询一下订单 ORD-1001" --customer-id CUST-001
 ```
 
-## API 摘要
-
-- `GET /`：前端工作台。
-- `GET /health`：服务健康检查。
-- `GET /config/status`：模型配置状态，不暴露密钥。
-- `POST /chat`：真实 LLM Agent 对话。
-- `POST /tools/{tool_name}`：本地业务工具调用。
-- `GET /tickets`：售后工单列表。
-- `GET /approvals`：待审批高风险操作。
-- `POST /approvals/{approval_id}/approve`：审批大额退款。
-- `GET /refunds`：退款记录列表。
-
-## 测试与验收
+## 测试
 
 ```powershell
 py -3.11 -m pytest -q
@@ -168,34 +136,34 @@ py -3.11 -m pytest -q
 验收标准：
 
 - 测试全部通过。
-- 首页 `/` 可访问，页面中文无乱码。
-- `/docs` 可访问 Swagger 文档。
-- 不配置 API Key 时，本地业务工具链路能完整跑通。
-- 配置 API Key 后，`/chat` 能调用真实模型并触发 Tool Calling。
-- 大额退款必须先进入人工审核，审批通过后才出现在退款记录中。
+- 首页中文正常显示，无乱码。
+- `/docs` 可访问并展示接口。
+- 不填写 API Key 时，本地业务接口可完整运行。
+- 填写 API Key 后，`/chat` 可触发真实 Tool Calling。
+- 大额退款必须经人工审核，通过才创建退款，拒绝不创建退款。
 
 ## 常见问题
 
 ### `/chat` 返回 503
 
-说明没有配置 `DASHSCOPE_API_KEY` 或 `LLM_API_KEY`。复制 `.env.example` 为 `.env` 后填写真实 Key，再重启服务。
+说明没有配置 `DASHSCOPE_API_KEY` 或 `LLM_API_KEY`。填写 `.env` 后重启服务。
 
-### 本地工具能用，但聊天框不可用
+### 本地业务按钮可以用，但聊天不可用
 
-这是正常情况。聊天框依赖真实 LLM API Key；右侧业务工具直接调用本地 FastAPI 和 SQLite，不依赖模型。
+聊天能力依赖真实模型 API Key；订单、物流、工单、审批、退款记录等业务接口不依赖模型。
 
-### Python 3.14 下测试报 DLL 错误
+### 默认 Python 跑测试失败
 
-请切换到 Python 3.10 到 3.12。Windows 推荐命令：
+请确认使用 Python 3.10 到 3.12。Windows 推荐：
 
 ```powershell
 py -3.11 -m pytest -q
 ```
 
-## 可扩展方向
+## 生产化延展
 
-- 接入真实订单、物流和 CRM 系统。
-- 增加 Redis 会话记忆和多轮上下文持久化。
-- 使用 LangGraph 编排更复杂的客服状态机。
-- 接入向量库，实现客服知识库 RAG 问答。
-- 增加管理员后台、审计日志和权限控制。
+- 接入真实订单系统、物流系统和 CRM。
+- 增加用户登录、角色权限、审计日志和审批备注。
+- 使用 Redis 或数据库保存多轮会话上下文。
+- 使用 LangGraph 编排复杂客服状态流。
+- 接入向量库，增加客服知识库 RAG 问答。

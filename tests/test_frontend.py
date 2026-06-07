@@ -30,10 +30,13 @@ def test_homepage_serves_customer_service_console(tmp_path):
     assert response.status_code == 200
     assert "Enterprise Service Console" in response.text
     assert "app-shell" in response.text
-    assert "Interview Demo Console" in response.text
-    assert "Agent Tool Chain" in response.text
+    assert "Operations Console" in response.text
+    assert "Agent Workflow" in response.text
+    assert "订单记录" in response.text
     assert "退款记录" in response.text
     assert "智能客服会话" in response.text
+    assert "Inter" + "view " + "De" + "mo" not in response.text
+    assert "De" + "mo " + "Orders" not in response.text
     assert "�" not in response.text
     assert "绯" not in response.text
 

@@ -7,9 +7,11 @@ const healthText = document.querySelector("#healthText");
 const llmText = document.querySelector("#llmText");
 const runtimeDot = document.querySelector("#runtimeDot");
 const llmDot = document.querySelector("#llmDot");
+const orderCount = document.querySelector("#orderCount");
 const ticketCount = document.querySelector("#ticketCount");
 const approvalCount = document.querySelector("#approvalCount");
 const refundCount = document.querySelector("#refundCount");
+const orderBadge = document.querySelector("#orderBadge");
 const ticketBadge = document.querySelector("#ticketBadge");
 const refundBadge = document.querySelector("#refundBadge");
 const thresholdValue = document.querySelector("#thresholdValue");
@@ -18,6 +20,7 @@ const chatForm = document.querySelector("#chatForm");
 const messageInput = document.querySelector("#messageInput");
 const toolOutput = document.querySelector("#toolOutput");
 const approvalList = document.querySelector("#approvalList");
+const orderList = document.querySelector("#orderList");
 const ticketList = document.querySelector("#ticketList");
 const refundList = document.querySelector("#refundList");
 const modelPill = document.querySelector("#modelPill");
@@ -89,6 +92,27 @@ function renderTickets(items) {
   });
 }
 
+function renderOrders(items) {
+  orderList.innerHTML = "";
+  orderBadge.textContent = items.length;
+  if (!items.length) {
+    orderList.appendChild(emptyItem("No orders", "当前没有订单记录"));
+    return;
+  }
+  items.forEach((item) => {
+    const row = document.createElement("div");
+    row.className = "record-item";
+    row.innerHTML = `
+      <div>
+        <strong>${item.order_id} · ${item.product_name}</strong>
+        <span>${item.customer_id} · ${item.status} · ${item.paid_at}</span>
+      </div>
+      <small>${formatMoney(item.amount)}</small>
+    `;
+    orderList.appendChild(row);
+  });
+}
+
 function renderApprovals(items) {
   approvalList.innerHTML = "";
   if (!items.length) {
@@ -103,7 +127,10 @@ function renderApprovals(items) {
         <strong>#${item.id} ${item.action}</strong>
         <span>${item.risk_reason}</span>
       </div>
-      <button type="button" data-approval="${item.id}">Approve</button>
+      <div class="approval-actions">
+        <button type="button" data-approval="${item.id}" data-decision="approve">Approve</button>
+        <button class="secondary" type="button" data-approval="${item.id}" data-decision="reject">Reject</button>
+      </div>
     `;
     approvalList.appendChild(row);
   });
@@ -141,12 +168,14 @@ async function refreshStatus() {
   }
 
   try {
-    const [tickets, approvals, refunds, config] = await Promise.all([
+    const [orders, tickets, approvals, refunds, config] = await Promise.all([
+      requestJson("/orders"),
       requestJson("/tickets"),
       requestJson("/approvals"),
       requestJson("/refunds"),
       requestJson("/config/status"),
     ]);
+    orderCount.textContent = orders.length;
     ticketCount.textContent = tickets.length;
     approvalCount.textContent = approvals.length;
     refundCount.textContent = refunds.length;
@@ -155,10 +184,12 @@ async function refreshStatus() {
     modelPill.textContent = config.model || "OpenAI-compatible";
     handoffBanner.querySelector("span").textContent = config.next_step;
     llmDot.classList.toggle("ready", config.llm_ready);
+    renderOrders(orders);
     renderTickets(tickets);
     renderApprovals(approvals);
     renderRefunds(refunds);
   } catch {
+    orderCount.textContent = "0";
     ticketCount.textContent = "0";
     approvalCount.textContent = "0";
     refundCount.textContent = "0";
@@ -217,6 +248,19 @@ async function approve(id) {
   }
 }
 
+async function reject(id) {
+  try {
+    const data = await requestJson(`/approvals/${id}/reject`, {
+      method: "POST",
+      body: JSON.stringify({ reviewer: "admin" }),
+    });
+    renderJson(toolOutput, data);
+    await refreshStatus();
+  } catch (error) {
+    renderJson(toolOutput, error);
+  }
+}
+
 chatForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const message = messageInput.value.trim();
@@ -244,7 +288,12 @@ document.querySelectorAll("[data-tool]").forEach((button) => {
 
 approvalList.addEventListener("click", (event) => {
   const button = event.target.closest("[data-approval]");
-  if (button) approve(button.dataset.approval);
+  if (!button) return;
+  if (button.dataset.decision === "reject") {
+    reject(button.dataset.approval);
+    return;
+  }
+  approve(button.dataset.approval);
 });
 
 document.querySelector("#refreshBtn").addEventListener("click", refreshStatus);

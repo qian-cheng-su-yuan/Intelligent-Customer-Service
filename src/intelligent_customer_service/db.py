@@ -14,7 +14,7 @@ console = Console()
 @app.command()
 def init(
     database_path: Path | None = typer.Option(None, "--database-path", "-d", help="SQLite database path."),
-    seed: bool = typer.Option(False, "--seed", help="Insert demo orders and logistics records."),
+    seed: bool = typer.Option(False, "--seed", help="Insert initial orders and logistics records."),
 ) -> None:
     settings = Settings()
     path = database_path or settings.database_path

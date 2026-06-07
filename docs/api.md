@@ -2,7 +2,7 @@
 
 ## GET `/`
 
-Serves the built-in service console frontend. This page can be used for a full local demo:
+Serves the built-in service console frontend. This page can be used for daily local operations and delivery validation:
 
 - chat with the LLM-backed customer service Agent
 - run local business tools without using LLM tokens
@@ -73,7 +73,7 @@ Response:
 
 ## POST `/tools/{tool_name}`
 
-Executes a local business tool directly. This is useful for frontend demos and offline validation because it does not call the LLM.
+Executes a local business tool directly. This is useful for operations validation and troubleshooting because it does not call the LLM.
 
 Request for `/tools/query_order`:
 
@@ -103,6 +103,23 @@ Response:
 ## GET `/tickets`
 
 Returns after-sales repair tickets.
+
+## GET `/orders`
+
+Returns seeded or imported order records ordered by newest payment time first.
+
+```json
+[
+  {
+    "order_id": "ORD-1002",
+    "customer_id": "CUST-001",
+    "product_name": "Smart Keyboard",
+    "amount": 299.0,
+    "status": "shipped",
+    "paid_at": "2026-05-22 09:30:00"
+  }
+]
+```
 
 ## GET `/approvals`
 
@@ -143,5 +160,24 @@ Response:
   "status": "approved",
   "approval": {},
   "refund": {}
+}
+```
+
+## POST `/approvals/{approval_id}/reject`
+
+Rejects a pending refund. No refund record is created.
+
+Request:
+
+```json
+{"reviewer":"admin"}
+```
+
+Response:
+
+```json
+{
+  "status": "rejected",
+  "approval": {}
 }
 ```

@@ -35,6 +35,20 @@ def test_chat_endpoint_uses_injected_agent(tmp_path):
     assert response.json()["tool_calls"][0]["name"] == "query_order"
 
 
+def test_orders_endpoint_returns_seeded_business_orders(tmp_path):
+    db_path = tmp_path / "service.db"
+    initialize_database(db_path, seed=True)
+    app = create_app(agent=FakeAgent(), tools=CustomerServiceTools(CustomerServiceRepository(db_path)))
+    client = TestClient(app)
+
+    response = client.get("/orders")
+
+    assert response.status_code == 200
+    assert len(response.json()) == 3
+    assert response.json()[0]["order_id"] == "ORD-1002"
+    assert response.json()[0]["customer_id"] == "CUST-001"
+
+
 def test_approval_endpoint_executes_pending_refund(tmp_path):
     db_path = tmp_path / "service.db"
     initialize_database(db_path, seed=True)
@@ -51,6 +65,26 @@ def test_approval_endpoint_executes_pending_refund(tmp_path):
 
     assert response.status_code == 200
     assert response.json()["status"] == "approved"
+
+
+def test_approval_endpoint_rejects_pending_refund_without_creating_refund(tmp_path):
+    db_path = tmp_path / "service.db"
+    initialize_database(db_path, seed=True)
+    repo = CustomerServiceRepository(db_path)
+    tools = CustomerServiceTools(repo, refund_review_threshold=500)
+    refund = tools.execute(
+        "request_refund",
+        {"order_id": "ORD-1001", "customer_id": "CUST-001", "amount": 899.0, "reason": "quality issue"},
+    )
+    app = create_app(agent=FakeAgent(), tools=tools)
+    client = TestClient(app)
+
+    response = client.post(f"/approvals/{refund['approval']['id']}/reject", json={"reviewer": "admin"})
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "rejected"
+    assert response.json()["approval"]["status"] == "rejected"
+    assert client.get("/refunds").json() == []
 
 
 def test_refunds_endpoint_returns_refund_history_after_approval(tmp_path):

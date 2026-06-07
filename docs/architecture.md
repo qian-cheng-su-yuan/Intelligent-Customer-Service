@@ -28,7 +28,7 @@ flowchart LR
 - `llm_client.py`: Wraps OpenAI-compatible chat completions with tools.
 - `agent.py`: Orchestrates LLM calls, tool execution, and fallback answers.
 - `api.py`: Provides FastAPI endpoints.
-- `cli.py`: Provides local demos and operations.
+- `cli.py`: Provides local operations commands.
 
 ## Data Flow
 

@@ -85,6 +85,10 @@ def create_app(agent: CustomerServiceAgent | None = None, tools: CustomerService
             raise HTTPException(status_code=400, detail=result)
         return result
 
+    @app.get("/orders")
+    def list_orders() -> list[dict]:
+        return tools.repository.list_orders()
+
     @app.get("/tickets")
     def list_tickets() -> list[dict]:
         return tools.repository.list_tickets()
@@ -101,6 +105,13 @@ def create_app(agent: CustomerServiceAgent | None = None, tools: CustomerService
     def approve_refund(approval_id: int, request: ApproveRequest) -> dict:
         try:
             return tools.repository.approve_pending_refund(approval_id, request.reviewer)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    @app.post("/approvals/{approval_id}/reject")
+    def reject_refund(approval_id: int, request: ApproveRequest) -> dict:
+        try:
+            return tools.repository.reject_pending_refund(approval_id, request.reviewer)
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 

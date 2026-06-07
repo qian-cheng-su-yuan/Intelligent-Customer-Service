@@ -12,7 +12,7 @@
         <div class="brand-block">
           <div class="brand-mark">ICS</div>
           <div>
-            <p class="eyebrow">Interview Demo Console</p>
+            <p class="eyebrow">Operations Console</p>
             <h1>Enterprise Service Console</h1>
           </div>
         </div>
@@ -40,7 +40,7 @@
         </section>
 
         <section class="chain-panel">
-          <p class="panel-label">Agent Tool Chain</p>
+          <p class="panel-label">Agent Workflow</p>
           <ol class="chain-list">
             <li>用户意图识别</li>
             <li>JSON Schema 工具选择</li>
@@ -67,10 +67,10 @@
           </div>
         </header>
 
-        <section class="metric-row" aria-label="Demo metrics">
+        <section class="metric-row" aria-label="Service operations metrics">
           <article class="metric-card">
-            <span>Demo Orders</span>
-            <strong>3</strong>
+            <span>Orders</span>
+            <strong id="orderCount">0</strong>
           </article>
           <article class="metric-card">
             <span>Tickets</span>
@@ -98,7 +98,7 @@
 
             <div class="handoff-banner" id="handoffBanner">
               <strong>真实 LLM Tool Calling</strong>
-              <span>填写 API Key 后，会话会调用真实模型并触发后端工具。</span>
+              <span>配置 API Key 后，会话会调用真实模型并触发后端业务工具。</span>
             </div>
 
             <div id="chatLog" class="chat-log" aria-live="polite">
@@ -151,6 +151,17 @@
         </section>
 
         <section class="records-grid">
+          <article class="record-panel">
+            <div class="section-heading compact">
+              <div>
+                <p class="eyebrow">Orders</p>
+                <h3>订单记录</h3>
+              </div>
+              <span class="mini-pill" id="orderBadge">0</span>
+            </div>
+            <div id="orderList" class="record-list"></div>
+          </article>
+
           <article class="record-panel">
             <div class="section-heading compact">
               <div>

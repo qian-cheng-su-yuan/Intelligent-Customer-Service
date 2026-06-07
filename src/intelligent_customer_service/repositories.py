@@ -33,6 +33,9 @@ class CustomerServiceRepository:
             (order_id, customer_id),
         )
 
+    def list_orders(self) -> list[dict[str, Any]]:
+        return self._fetch_all("SELECT * FROM orders ORDER BY paid_at DESC, order_id DESC")
+
     def get_logistics(self, order_id: str, customer_id: str) -> dict[str, Any] | None:
         return self._fetch_one(
             """
@@ -152,3 +155,27 @@ class CustomerServiceRepository:
         if refund is None:
             raise ValueError(f"refund {refund_id} not found")
         return {"status": updated["status"], "approval": updated, "refund": refund}
+
+    def reject_pending_refund(self, approval_id: int, reviewer: str) -> dict[str, Any]:
+        with connect(self.database_path) as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            row = connection.execute("SELECT * FROM pending_approvals WHERE id = ?", (approval_id,)).fetchone()
+            if row is None:
+                raise ValueError(f"approval {approval_id} not found")
+            approval = dict(row)
+            if approval["status"] != "pending":
+                raise ValueError(f"approval {approval_id} has already been {approval['status']}")
+            if approval["action"] != "request_refund":
+                raise ValueError(f"approval {approval_id} is not a refund action")
+
+            connection.execute(
+                """
+                UPDATE pending_approvals
+                SET status = 'rejected', reviewer = ?, reviewed_at = CURRENT_TIMESTAMP
+                WHERE id = ?
+                """,
+                (reviewer, approval_id),
+            )
+            connection.commit()
+        updated = self.get_approval(approval_id)
+        return {"status": updated["status"], "approval": updated}
