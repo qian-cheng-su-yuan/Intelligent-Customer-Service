@@ -90,10 +90,13 @@ def reject(approval_id: int, reviewer: str = typer.Option("admin", "--reviewer")
 
 
 @app.command()
-def init_db(seed: bool = typer.Option(True, "--seed/--no-seed")) -> None:
+def init_db(
+    seed: bool = typer.Option(True, "--seed/--no-seed"),
+    reset: bool = typer.Option(False, "--reset", help="Remove the existing SQLite database before initialization."),
+) -> None:
     settings = Settings()
-    initialize_database(settings.database_path, seed=seed)
-    console.print(f"Database initialized at [bold]{settings.database_path}[/bold]. seed={seed}")
+    initialize_database(settings.database_path, seed=seed, reset=reset)
+    console.print(f"Database initialized at [bold]{settings.database_path}[/bold]. seed={seed} reset={reset}")
 
 
 if __name__ == "__main__":

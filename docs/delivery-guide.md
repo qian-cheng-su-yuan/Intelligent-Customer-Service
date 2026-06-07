@@ -40,9 +40,11 @@ LLM_MODEL=deepseek-chat
 ```powershell
 py -3.11 -m pip install -e ".[dev]"
 copy .env.example .env
-py -3.11 -m intelligent_customer_service.db init --seed
+py -3.11 -m intelligent_customer_service.db init --reset --seed
 py -3.11 -m uvicorn intelligent_customer_service.api:app --reload
 ```
+
+`--reset --seed` 用于交付验收时重建干净的本地 SQLite 数据库。已有业务数据需要保留时，请不要使用 `--reset`。
 
 访问：
 

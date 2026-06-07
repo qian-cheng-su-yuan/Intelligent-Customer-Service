@@ -61,10 +61,10 @@ py -3.11 -m pip install -e ".[dev]"
 ## 4. 初始化数据库
 
 ```powershell
-py -3.11 -m intelligent_customer_service.db init --seed
+py -3.11 -m intelligent_customer_service.db init --reset --seed
 ```
 
-该命令会创建 SQLite 表并写入初始订单和物流数据。默认数据库路径：
+该命令会删除旧的本地 SQLite 文件，重新创建表，并写入初始订单和物流数据，适合首次交付验收或重新跑通完整流程。已有业务数据需要保留时，请去掉 `--reset`。默认数据库路径：
 
 ```text
 data/customer_service.db

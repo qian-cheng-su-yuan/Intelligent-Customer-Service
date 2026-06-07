@@ -15,11 +15,12 @@ console = Console()
 def init(
     database_path: Path | None = typer.Option(None, "--database-path", "-d", help="SQLite database path."),
     seed: bool = typer.Option(False, "--seed", help="Insert initial orders and logistics records."),
+    reset: bool = typer.Option(False, "--reset", help="Remove the existing SQLite database before initialization."),
 ) -> None:
     settings = Settings()
     path = database_path or settings.database_path
-    initialize_database(path, seed=seed)
-    console.print(f"Database initialized at [bold]{path}[/bold]. seed={seed}")
+    initialize_database(path, seed=seed, reset=reset)
+    console.print(f"Database initialized at [bold]{path}[/bold]. seed={seed} reset={reset}")
 
 
 @app.command()

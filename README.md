@@ -67,9 +67,11 @@ REFUND_REVIEW_THRESHOLD=500
 
 ```powershell
 py -3.11 -m pip install -e ".[dev]"
-py -3.11 -m intelligent_customer_service.db init --seed
+py -3.11 -m intelligent_customer_service.db init --reset --seed
 py -3.11 -m uvicorn intelligent_customer_service.api:app --reload
 ```
+
+`--reset` 会删除并重建本地 SQLite 文件，适合首次验收或重新跑通完整流程；如果数据库里已经有需要保留的业务数据，请只执行 `init --seed` 或直接启动服务。
 
 打开运营工作台：
 

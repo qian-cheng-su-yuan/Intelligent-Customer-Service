@@ -1,4 +1,6 @@
 import sqlite3
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 
 
@@ -78,8 +80,24 @@ def connect(database_path: Path | str) -> sqlite3.Connection:
     return connection
 
 
-def initialize_database(database_path: Path | str, seed: bool = False) -> None:
-    with connect(database_path) as connection:
+@contextmanager
+def managed_connection(database_path: Path | str) -> Iterator[sqlite3.Connection]:
+    connection = connect(database_path)
+    try:
+        yield connection
+    except Exception:
+        connection.rollback()
+        raise
+    finally:
+        connection.close()
+
+
+def initialize_database(database_path: Path | str, seed: bool = False, reset: bool = False) -> None:
+    path = Path(database_path)
+    if reset and path.exists():
+        path.unlink()
+
+    with managed_connection(path) as connection:
         connection.executescript(SCHEMA_SQL)
         if seed:
             connection.executescript(SEED_SQL)

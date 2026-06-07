@@ -1,29 +1,21 @@
 import json
-import sqlite3
 from pathlib import Path
 from typing import Any
 
-from .database import connect
+from .database import managed_connection
 
 
 class CustomerServiceRepository:
     def __init__(self, database_path: Path | str):
         self.database_path = Path(database_path)
 
-    def _execute(self, sql: str, params: tuple[Any, ...] = ()) -> sqlite3.Cursor:
-        connection = connect(self.database_path)
-        cursor = connection.execute(sql, params)
-        connection.commit()
-        connection.close()
-        return cursor
-
     def _fetch_one(self, sql: str, params: tuple[Any, ...]) -> dict[str, Any] | None:
-        with connect(self.database_path) as connection:
+        with managed_connection(self.database_path) as connection:
             row = connection.execute(sql, params).fetchone()
             return dict(row) if row else None
 
     def _fetch_all(self, sql: str, params: tuple[Any, ...] = ()) -> list[dict[str, Any]]:
-        with connect(self.database_path) as connection:
+        with managed_connection(self.database_path) as connection:
             rows = connection.execute(sql, params).fetchall()
             return [dict(row) for row in rows]
 
@@ -48,7 +40,7 @@ class CustomerServiceRepository:
         )
 
     def create_repair_ticket(self, payload: dict[str, Any]) -> dict[str, Any]:
-        with connect(self.database_path) as connection:
+        with managed_connection(self.database_path) as connection:
             cursor = connection.execute(
                 """
                 INSERT INTO repair_tickets(order_id, customer_id, issue_type, description, contact)
@@ -76,7 +68,7 @@ class CustomerServiceRepository:
         return self._fetch_all("SELECT * FROM repair_tickets ORDER BY id DESC")
 
     def create_refund(self, payload: dict[str, Any]) -> dict[str, Any]:
-        with connect(self.database_path) as connection:
+        with managed_connection(self.database_path) as connection:
             cursor = connection.execute(
                 """
                 INSERT INTO refunds(order_id, customer_id, amount, reason)
@@ -95,7 +87,7 @@ class CustomerServiceRepository:
         return self._fetch_all("SELECT * FROM refunds ORDER BY id DESC")
 
     def create_pending_approval(self, action: str, payload: dict[str, Any], risk_reason: str) -> dict[str, Any]:
-        with connect(self.database_path) as connection:
+        with managed_connection(self.database_path) as connection:
             cursor = connection.execute(
                 """
                 INSERT INTO pending_approvals(action, payload_json, risk_reason)
@@ -121,7 +113,7 @@ class CustomerServiceRepository:
         return approvals
 
     def approve_pending_refund(self, approval_id: int, reviewer: str) -> dict[str, Any]:
-        with connect(self.database_path) as connection:
+        with managed_connection(self.database_path) as connection:
             connection.execute("BEGIN IMMEDIATE")
             row = connection.execute("SELECT * FROM pending_approvals WHERE id = ?", (approval_id,)).fetchone()
             if row is None:
@@ -157,7 +149,7 @@ class CustomerServiceRepository:
         return {"status": updated["status"], "approval": updated, "refund": refund}
 
     def reject_pending_refund(self, approval_id: int, reviewer: str) -> dict[str, Any]:
-        with connect(self.database_path) as connection:
+        with managed_connection(self.database_path) as connection:
             connection.execute("BEGIN IMMEDIATE")
             row = connection.execute("SELECT * FROM pending_approvals WHERE id = ?", (approval_id,)).fetchone()
             if row is None:
